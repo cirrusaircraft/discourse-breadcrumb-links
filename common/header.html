@@ -11,7 +11,18 @@
 
     resetBreadcrumbs();
 
-    if (url.includes("/c/")) {
+    if (url === "/latest") {
+      $("#breadcrumbsContainer").append(`
+                  <li class="breadcrumb-item">
+                      <a class="home" href="/">Vision Jet Community Forum</a>
+                  </li>
+              `);
+      $("#breadcrumbsContainer").append(`
+                        <li class="breadcrumb-item active">
+                            All Discussions
+                        </li>
+                    `);
+    } else if (url.includes("/c/")) {
       // If on a category page
       const categorySlugOrId = url.split("/")[2];
 
