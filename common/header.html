@@ -77,11 +77,8 @@
                   const categoryURL = `/c/${categoryResponse.category.slug}`;
 
                   $("#breadcrumbsContainer").append(`
-                                        <li class="breadcrumb-item">
-                                            <a href="${categoryURL}">${categoryTitle}</a>
-                                        </li>
                                         <li class="breadcrumb-item active">
-                                            ${topicTitle}
+                                            <a href="${categoryURL}">${categoryTitle}</a>
                                         </li>
                                     `);
                 }
