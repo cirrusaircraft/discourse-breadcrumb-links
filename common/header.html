@@ -4,98 +4,115 @@
   });
 
   const updateBreadcrumbs = (url) => {
+    var BREADCRUMB_HTMLS = "";
+
     // Helper function to reset the breadcrumbs container
     const resetBreadcrumbs = () => {
       $("#breadcrumbsContainer").empty();
     };
 
-    resetBreadcrumbs();
+    const appendBreadcrumb = (label, link) => {
+      label = link ? `<a href="${link}">${label}</a>` : label;
+      BREADCRUMB_HTMLS += `
+          <li class="breadcrumb-item">
+            ${label}
+          </li>
+      `;
+    }
 
-    if (url === "/latest") {
-      $("#breadcrumbsContainer").append(`
-                  <li class="breadcrumb-item">
-                      <a class="home" href="/">Vision Jet Community Forum</a>
-                  </li>
-              `);
-      $("#breadcrumbsContainer").append(`
-                        <li class="breadcrumb-item active">
-                            All Discussions
-                        </li>
-                    `);
-    } else if (url.includes("/c/")) {
-      // If on a category page
-      const categorySlugOrId = url.split("/")[2];
-
-      $("#breadcrumbsContainer").append(`
-                  <li class="breadcrumb-item">
-                      <a class="home" href="/">Vision Jet Community Forum</a>
-                  </li>
-              `);
-
+    const populateBreadcrumbsByCategoryId = (pageCategoryId) => {
       $.ajax({
         type: "GET",
-        url: `/c/${categorySlugOrId}/show.json`,
+        url: `/categories.json`,
+        data: {include_subcategories: true},
         success: function (response) {
-          if (response && response.category && response.category.name) {
-            const categoryTitle = response.category.name;
-            $("#breadcrumbsContainer").append(`
-                              <li class="breadcrumb-item active">
-                                  ${categoryTitle}
-                              </li>
-                          `);
+          if (response && response.category_list && response.category_list.categories) {
+            for(let i=0; i < response.category_list.categories.length; i++){
+              let cat = response.category_list.categories[i];
+              let subcat_ids = cat.subcategory_list ? cat.subcategory_list.map(x => x.id) : [];
+
+              if (cat.id == pageCategoryId || subcat_ids.indexOf(pageCategoryId) != -1){
+                if(cat.id == pageCategoryId){
+                  // add category name without link
+                  appendBreadcrumb(cat.name);
+
+                }else{
+                  // add category name with link and subcategory without link
+                  appendBreadcrumb(cat.name, `/c/${cat.slug}`)
+                  for(let c=0; c < cat.subcategory_list.length; c++){
+                    let subcat = cat.subcategory_list[c];
+                    if(subcat.id == pageCategoryId){
+                      appendBreadcrumb(subcat.name)
+                    }
+                  }
+                }
+                $("#breadcrumbsContainer").html(BREADCRUMB_HTMLS)
+              }
+
+            }
           }
         },
         error: function (error) {
           console.error("Error fetching category details", error);
         },
       });
-    } else if (url.includes("/t/")) {
-      // If on a topic page
-      const topicId = url.split("/")[2];
-
-      $("#breadcrumbsContainer").append(`
-                <li class="breadcrumb-item">
-                    <a class="home" href="/">Vision Jet Community Forum</a>
-                </li>
-            `);
-
-      $.ajax({
-        type: "GET",
-        url: `/t/${topicId}.json`,
-        success: function (response) {
-          if (response && response.title) {
-            const topicTitle = response.title;
-            const categoryId = response.category_id;
-
-            // Now, fetch the category name using the category ID
-            $.ajax({
-              type: "GET",
-              url: `/c/${categoryId}/show.json`,
-              success: function (categoryResponse) {
-                if (categoryResponse && categoryResponse.category) {
-                  const categoryTitle = categoryResponse.category.name;
-                  const categoryURL = `/c/${categoryResponse.category.slug}`;
-
-                  $("#breadcrumbsContainer").append(`
-                                        <li class="breadcrumb-item active">
-                                            <a href="${categoryURL}">${categoryTitle}</a>
-                                        </li>
-                                    `);
-                }
-              },
-              error: function (error) {
-                console.error(
-                  "Error fetching category details for topic",
-                  error
-                );
-              },
-            });
-          }
-        },
-        error: function (error) {
-          console.error("Error fetching topic details", error);
-        },
-      });
     }
+
+    resetBreadcrumbs();
+    let split_url = url.split("/");
+
+    if (url.includes("/latest")) {
+      // if on All Discussions page
+      console.log("asaddas");
+      appendBreadcrumb('Vision Jet Community Forum', '/');
+      appendBreadcrumb('All Discussions');
+      $("#breadcrumbsContainer").append(BREADCRUMB_HTMLS)
+
+    } else if (url.includes("/categories")) {
+      // If on all categories page
+      appendBreadcrumb('Vision Jet Community Forum');
+      appendBreadcrumb('Categories');
+      $("#breadcrumbsContainer").html(BREADCRUMB_HTMLS)
+
+    } else if (url.includes("/tag/")){
+      // if in a Tag page
+      appendBreadcrumb('Vision Jet Community Forum', '/');
+      appendBreadcrumb('All Tags', '/tags');
+      const tag = split_url[split_url.length - 1];
+      appendBreadcrumb(tag);
+      $("#breadcrumbsContainer").html(BREADCRUMB_HTMLS)
+
+    } else if (url.includes("/tags")){
+      // if in All Tags page
+      appendBreadcrumb('Vision Jet Community Forum', '/');
+      appendBreadcrumb('All Tags');
+      $("#breadcrumbsContainer").html(BREADCRUMB_HTMLS)
+
+    } else if (url.includes("/c/")) {
+      // If on a category page
+      appendBreadcrumb('Vision Jet Community Forum', '/');
+      appendBreadcrumb('Categories', '/categories');
+      const pageCategoryId = parseInt(split_url[split_url.length - 1]);
+      populateBreadcrumbsByCategoryId(pageCategoryId);
+
+    } else if (url.includes("/t/")) {
+        // If on a topic page
+        const topicId = url.split("/")[2];
+        appendBreadcrumb('Vision Jet Community Forum', '/');
+        appendBreadcrumb('Categories', '/categories');
+
+        $.ajax({
+          type: "GET",
+          url: `/t/${topicId}.json`,
+          success: function (response) {
+            if (response && response.category_id) {
+              populateBreadcrumbsByCategoryId(response.category_id);
+            }
+          },
+          error: function (error) {
+            console.error("Error fetching topic details", error);
+          },
+        });
+      }
   };
 </script>
