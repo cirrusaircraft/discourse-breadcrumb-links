@@ -34,9 +34,3 @@
     }
   }
 }
-
-// fix to show it up in All Discussions page, but not in home
-.display-search-banner #main-container,
-.display-search-banner .list-container {
-  display: block !important;
-}
