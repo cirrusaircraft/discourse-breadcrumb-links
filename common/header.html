@@ -59,7 +59,7 @@
     }
 
     resetBreadcrumbs();
-    let split_url = url.split("/");
+    let split_url = url.split("?")[0].split("/");
 
     if (url.includes("/latest")) {
       // if on All Discussions page
