@@ -73,6 +73,12 @@
       appendBreadcrumb('Categories');
       $("#breadcrumbsContainer").html(BREADCRUMB_HTMLS)
 
+    } else if (url.includes("/search")) {
+      // If on search page
+      appendBreadcrumb('Vision Jet Community Forum', '/');
+      appendBreadcrumb('Search');
+      $("#breadcrumbsContainer").html(BREADCRUMB_HTMLS)
+
     } else if (url.includes("/tag/")){
       // if in a Tag page
       appendBreadcrumb('Vision Jet Community Forum', '/');
